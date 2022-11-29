@@ -8,7 +8,7 @@ cacheCleanupInterval: 90
 
 VaultConfig:
   vaultTokenFromEnv: true
-  vaultAddr: https://vault.dev-global.hanacloud.ondemand.com/
+  vaultAddr: unset
   vaultLoginPath:
   role: iaas-monitor
 
