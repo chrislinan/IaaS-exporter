@@ -1,0 +1,145 @@
+provider: aws
+project: hc-dev
+cloudProviderAccountVaultSubpath: hana
+region: eu-central-1
+scrapingDuration: 60 # minutes
+cacheExpiration: 50
+cacheCleanupInterval: 90
+
+VaultConfig:
+  vaultTokenFromEnv: true
+  vaultAddr: https://vault.dev-global.hanacloud.ondemand.com/
+  vaultLoginPath:
+  role: iaas-monitor
+
+vaultBackupBucket:
+  prefix: etcd.backup
+  bucket: vault-backup-bucket
+
+AwsConfig:
+  healthEventStatusCodes:
+  - "open"
+  - "upcoming"
+  - "closed"
+  healthEventTypeCategories:
+  - "issue"
+  - "accountNotification"
+  - "scheduledChange"
+  cloudwatchMetricsConf:
+    exportedTagsOnMetrics:
+      ec2:
+        - Name
+        - node.kubernetes.io/role
+      ebs:
+        - VolumeId
+      nlb:
+        - kubernetes.io/service-name
+        - KubernetesCluster
+      ngw:
+        - Name
+    jobs:
+      - type: ec2
+        length: 900
+        delay: 120
+        statistics:
+          - Minimum
+          - Maximum
+          - Sum
+        searchTags:
+          - key: Name
+            value: shoot--hc-dev--demo.*
+        metrics:
+          - name: CPUUtilization
+            statistics:
+              - Average
+            period: 600
+            length: 172800
+          - name: NetworkIn
+            statistics:
+              - Average
+            period: 600
+            length: 600
+          - name: NetworkOut
+            statistics:
+              - Average
+            period: 600
+            length: 600
+      - type: ebs
+        searchTags:
+          - key: Name
+            value: shoot--hc-dev--demo.*
+        metrics:
+          - name: VolumeReadOps
+            statistics:
+              - Average
+            period: 600
+            length: 600
+          - name: VolumeWriteOps
+            statistics:
+              - Average
+            period: 600
+            length: 600
+          - name: VolumeWriteBytes
+            statistics:
+              - Average
+            period: 600
+            length: 600
+          - name: VolumeReadBytes
+            statistics:
+              - Average
+            period: 600
+            length: 600
+      - type: nlb
+        searchTags:
+          - key: KubernetesCluster
+            value: shoot--hc-dev--demo.*
+        metrics:
+          - name: ActiveFlowCount
+            statistics:
+              - Average
+            period: 60
+            length: 3600
+          - name: PeakPacketsPerSecond
+            statistics:
+              - Maximum
+            period: 60
+            length: 3600
+          - name: ProcessedPackets
+            statistics:
+              - Sum
+            period: 60
+            length: 3600
+      - type: ngw
+        searchTags:
+          - key: Name
+            value: shoot--hc-dev--demo.*
+        metrics:
+          - name: BytesInFromDestination
+            statistics:
+              - Sum
+            period: 300
+            length: 3600
+          - name: BytesInFromSource
+            statistics:
+              - Sum
+            period: 300
+            length: 3600
+          - name: BytesOutToDestination
+            statistics:
+              - Sum
+            period: 300
+            length: 3600
+          - name: BytesOutToSource
+            statistics:
+              - Sum
+            period: 300
+            length: 3600
+
+
+GcpConfig:
+
+AzureConfig:
+  subscriptionID: a68ae472-1849-4ed9-a700-24f5070acd2d
+
+AliCloudConfig:
+  endpoint: oss-cn-hangzhou.aliyuncs.com

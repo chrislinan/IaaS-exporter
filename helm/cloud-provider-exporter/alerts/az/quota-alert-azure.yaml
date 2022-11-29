@@ -1,0 +1,20 @@
+groups:
+- name: cloud-provider-exporter-quota
+  rules:
+  - alert: Azure Service Quota Limits
+    annotations:
+      summary: 'Critical utilization of Azure Service Quota Limits'
+      description: "Subscription ID: {{ $labels.SubscriptionID }} \n 
+                    Subscription Name: {{ $labels.SubscriptionName }} \n 
+                    Quota Name: {{ $labels.QuotaName }} \n 
+                    Quota Code: {{ $labels.QuotaCode }} \n
+                    Quota Region: {{ $labels.Region }} \n 
+                    In Use: {{ $value }}% \n
+                    Landscape Overview: https://github.wdf.sap.corp/pages/DBaaS/Docs/overviews/landscapeOverview/"
+    expr: |
+      cpe_quota_current / on(QuotaCode) group_left() cpe_quota_limit{} * 100 > 80
+    for: 10m
+    labels:
+      severity: warning
+      topic: multi-az-alerts
+      responsible: HC-Landscape Disaster Recovery

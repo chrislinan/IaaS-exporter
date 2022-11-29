@@ -1,0 +1,18 @@
+groups:
+- name: cloud-provider-exporter-health
+  rules:
+  - alert: Alicloud Service Health Events
+    annotations:
+      summary: 'Details of Alicloud Service Health Events'
+      description: "Event ID: {{ $labels.eventID }} \n 
+                    Start Time - Last Updated Time: {{ $labels.impactStartTime }} - {{ $labels.impactEndTime }} \n 
+                    Impact Level: {{ $labels.level }} \n 
+                    Affected Service: {{ $labels.affectedService }} \n 
+                    Affected Regions: {{ $labels.affectedRegions }}"
+    expr: |
+      cpe_health_events + on(eventID) group_left(affectedService,affectedRegions) cpe_health_events_affected > 0
+    for: 10m
+    labels:
+      severity: warning
+      topic: multi-az-alerts
+      responsible: HC-Landscape Disaster Recovery

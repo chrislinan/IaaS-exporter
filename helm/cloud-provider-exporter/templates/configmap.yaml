@@ -1,0 +1,150 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-config
+  namespace: {{ .Values.namespace }}
+data:
+  config.yaml: |
+    provider: {{ .Values.k8sType }}
+    project: {{ .Values.project }}
+    cloudProviderAccountVaultSubpath: {{ .Values.cloudProviderAccountVaultSubpath }}
+    region: {{ .Values.region }}
+    scrapingDuration: {{ .Values.cloudProviderExporter.scrapingDuration }} # minutes
+    cacheExpiration: {{ .Values.cloudProviderExporter.cacheExpiration }}
+    cacheCleanupInterval: {{ .Values.cloudProviderExporter.cacheCleanupInterval }}
+
+    vaultBackupBucket:
+      prefix:  {{ .Values.config.vaultBackupBucket.prefix }}
+      bucket:  {{ .Values.config.vaultBackupBucket.bucket }}
+
+    VaultConfig:
+      vaultTokenFromEnv: {{ .Values.config.VaultConfig.vaultTokenFromEnv }}
+      vaultAddr: {{ .Values.vaultAddress }}
+      vaultLoginPath: auth/hc-generated/{{ .Values.project }}/{{ .Values.k8sClusterName }}/login
+      role: iaas-monitor
+
+    AwsConfig:
+      healthEventStatusCodes:
+        {{- range $.Values.config.AwsConfig.healthEventStatusCodes }}
+        - {{ . }}
+        {{- end }}
+      healthEventTypeCategories:
+        {{- range $.Values.config.AwsConfig.healthEventTypeCategories }}
+        - {{ . }}
+        {{- end }}
+      cloudwatchMetricsConf:
+        exportedTagsOnMetrics:
+          ec2:
+            - Name
+            - node.kubernetes.io/role
+          ebs:
+            - VolumeId
+          elb:
+            - kubernetes.io/service-name
+            - KubernetesCluster
+        jobs:
+          - type: ec2
+            length: 900
+            delay: 120
+            statistics:
+              - Minimum
+              - Maximum
+              - Sum
+            searchTags:
+              - key: Name
+                value: shoot--hc-dev--demo.*
+            metrics:
+              - name: CPUUtilization
+                statistics:
+                  - Average
+                period: 600
+                length: 172800
+              - name: NetworkIn
+                statistics:
+                  - Average
+                period: 600
+                length: 600
+              - name: NetworkOut
+                statistics:
+                  - Average
+                period: 600
+                length: 600
+          - type: ebs
+            searchTags:
+              - key: Name
+                value: shoot--hc-dev--demo.*
+            metrics:
+              - name: VolumeReadOps
+                statistics:
+                  - Average
+                period: 600
+                length: 600
+              - name: VolumeWriteOps
+                statistics:
+                  - Average
+                period: 600
+                length: 600
+              - name: VolumeWriteBytes
+                statistics:
+                  - Average
+                period: 600
+                length: 600
+              - name: VolumeReadBytes
+                statistics:
+                  - Average
+                period: 600
+                length: 600
+          - type: nlb
+            searchTags:
+              - key: KubernetesCluster
+                value: shoot--hc-dev--demo.*
+            metrics:
+              - name: ActiveFlowCount
+                statistics:
+                  - Average
+                period: 60
+                length: 3600
+              - name: PeakPacketsPerSecond
+                statistics:
+                  - Maximum
+                period: 60
+                length: 3600
+              - name: ProcessedPackets
+                statistics:
+                  - Sum
+                period: 60
+                length: 3600
+          - type: ngw
+            searchTags:
+              - key: Name
+                value: shoot--hc-dev--demo.*
+            metrics:
+              - name: BytesInFromDestination
+                statistics:
+                  - Sum
+                period: 300
+                length: 3600
+              - name: BytesInFromSource
+                statistics:
+                  - Sum
+                period: 300
+                length: 3600
+              - name: BytesOutToDestination
+                statistics:
+                  - Sum
+                period: 300
+                length: 3600
+              - name: BytesOutToSource
+                statistics:
+                  - Sum
+                period: 300
+                length: 3600
+
+
+    GcpConfig:
+
+    AzureConfig:
+      subscriptionID: {{ .Values.config.AzureConfig.subscriptionID }}
+
+    AliCloudConfig:
+      endpoint: oss-cn-hangzhou.aliyuncs.com

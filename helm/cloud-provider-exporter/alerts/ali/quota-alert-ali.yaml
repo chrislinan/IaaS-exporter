@@ -1,0 +1,20 @@
+groups:
+- name: cloud-provider-exporter-quota
+  rules:
+  - alert: Alicloud Service Quota Limits
+    annotations:
+      summary: 'Critical utilization of Alicloud Service Quota Limits'
+      description: "Product Code: {{ $labels.ProductCode }} \n 
+                    Quota code: {{ $labels.QuotaCode }} \n
+                    Quota Name: {{ $labels.QuotaName }} \n 
+                    Quota Description: {{ $labels.QuotaDescription }} \n 
+                    In Use: {{ $value }}% \n
+                    Landscape Overview: https://github.wdf.sap.corp/pages/DBaaS/Docs/overviews/landscapeOverview/"
+
+    expr: |
+      cpe_quota_current / on(QuotaCode) group_left() cpe_quota_limit{} * 100 > 80
+    for: 10m
+    labels:
+      severity: warning
+      topic: multi-az-alerts
+      responsible: HC-Landscape Disaster Recovery

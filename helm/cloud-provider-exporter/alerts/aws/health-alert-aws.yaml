@@ -1,0 +1,23 @@
+groups:
+- name: cloud-provider-exporter-health
+  rules:
+  - alert: AWS Service Health Events
+    annotations:
+      summary: 'Details of AWS Service Health Events'
+      description: "Event ID: {{ $labels.eventID }} \n 
+                    Account ID: {{ $labels.accountID }} \n 
+                    Service: {{ $labels.cloudService }} \n 
+                    Region: {{ $labels.affectedRegions }} \n 
+                    Start Time - Last Updated Time: {{ $labels.startTime }} - {{ $labels.lastUpdatedTime }} \n 
+                    Event Type Code - Event Type Category: {{ $labels.eventTypeCode }} - {{ $labels.eventType }} \n 
+                    Event Scope Code: {{ $labels.eventScopeCode }} \n 
+                    Entity ID: {{ $labels.entityArn }} \n 
+                    Entity Value: {{ $labels.entityValue }} \n 
+                    Entity URL: {{ $labels.entityUrl }}"
+    expr: |
+      cpe_health_events{statusCode="open",eventType="issue"} * on (eventID) group_left (accountID, entityArn, entityValue, entityUrl, affectedRegions) cpe_health_events_affected > 0
+    for: 10m
+    labels:
+      severity: warning
+      topic: multi-az-alerts
+      responsible: HC-Landscape Disaster Recovery

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: {{ .Values.cloudProviderExporter.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      serviceAccountName: {{ .Values.name }}
+      imagePullSecrets:
+        - name: regsecret
+      enableServiceLinks: {{ .Values.enableServiceLinks }}
+      nodeSelector:
+        hana-cloud.workload-class/default: "1"
+      containers:
+        - name: {{ .Values.name }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          resources:
+            limits:
+              memory: {{ .Values.cloudProviderExporter.resources.limits.memory }}
+              cpu: {{ .Values.cloudProviderExporter.resources.limits.cpu }}
+            requests:
+              memory: {{ .Values.cloudProviderExporter.resources.requests.memory }}
+              cpu: {{ .Values.cloudProviderExporter.resources.requests.cpu }}
+          env:
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.name }}
+                  key: token
+                  optional: false
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config.yaml
+              subPath: config.yaml
+          ports:
+            - containerPort: {{ .Values.cloudProviderExporter.containerPort }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ .Values.name }}-config

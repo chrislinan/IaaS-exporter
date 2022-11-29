@@ -1,0 +1,16 @@
+{{ $values := .Values }}
+{{ $currentFile := print "alerts/" $values.k8sType "/*.yaml" }}
+{{ $prefix := print "alerts/" $values.k8sType "/" }}
+{{ range $path, $bytes := .Files.Glob $currentFile }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ printf "%s" $path | trimPrefix $prefix | trimSuffix ".yaml" }}
+  namespace: {{ $values.namespace }}
+  labels:
+    role: alert-rules
+    prometheus: prometheus
+spec:
+{{ printf "%s" $bytes | indent 2 }}
+{{- end }}

@@ -1,0 +1,17 @@
+{{- if .Values.dashboards }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.dashboards.name }}-dashboards
+  namespace: {{ .Values.namespace }}
+  annotations:
+    k8s-sidecar-target-directory: "/var/lib/grafana/dashboards/default"
+  labels:
+    grafana_dashboard: "1"
+data:
+{{- range $path, $bytes := .Files.Glob "dashboards/*.json" }}
+{{ print $path | trimPrefix "dashboards/" | indent 2 }}: |-
+{{ printf "%s" $bytes | indent 4 }}
+{{- end }}
+{{- end }}

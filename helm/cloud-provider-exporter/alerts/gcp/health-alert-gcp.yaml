@@ -1,0 +1,22 @@
+groups:
+- name: cloud-provider-exporter-health
+  rules:
+  - alert: GCP Service Health Events
+    annotations:
+      summary: 'Details of GCP Service Health Events'
+      description: "Event ID: {{ $labels.eventID }} \n 
+                    Title: {{ $labels.title }} \n 
+                    Event Status - Impact: {{ $labels.status }} - {{ $labels.eventType }} \n 
+                    Impact Level: {{ $labels.level }} \n 
+                    URL: {{ $labels.uri }} \n 
+                    Service Key - Service Name: {{ $labels.serviceKey }} - {{ $labels.serviceName }} \n 
+                    Start Time - Last Updated Time: {{ $labels.startTime }} - {{ $labels.lastUpdateTime }} \n 
+                    Affected Service: {{ $labels.affectedService }} \n 
+                    Affected Regions: {{ $labels.affectedRegions }}"
+    expr: |
+      cpe_health_events + on(eventID) group_left(affectedService,affectedRegions) cpe_health_events_affected > 0
+    for: 10m
+    labels:
+      severity: warning
+      topic: multi-az-alerts
+      responsible: HC-Landscape Disaster Recovery

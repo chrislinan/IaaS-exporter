@@ -1,0 +1,19 @@
+groups:
+- name: cloud-provider-exporter-quota
+  rules:
+  - alert: AWS Service Quota Limits
+    annotations:
+      summary: 'Critical utilization of AWS Service Quota Limits'
+      description: "Account ID: {{ $labels.AccountID }} \n 
+                    Account Alias: {{ $labels.AccountAlias }} \n 
+                    Service Code - Service Name: {{ $labels.ServiceCode }} - {{ $labels.ServiceName }} \n 
+                    Quota Code - Quota Name: {{ $labels.QuotaCode }} - {{ $labels.QuotaName }} \n 
+                    In Use: {{ $value }}% \n
+                    Landscape Overview: https://github.wdf.sap.corp/pages/DBaaS/Docs/overviews/landscapeOverview/"
+    expr: |
+      cpe_quota_current / on(QuotaCode) group_left() cpe_quota_limit{} * 100 > 80
+    for: 10m
+    labels:
+      severity: warning
+      topic: multi-az-alerts
+      responsible: HC-Landscape Disaster Recovery
